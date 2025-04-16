@@ -34,6 +34,18 @@ Route::middleware(['auth', 'cekrole:admin'])->group(function () {
     Route::get('/admin/edit/{id}', [AdminController::class, 'edit'])->name('product.edit');
     Route::put('/admin/update/{id}', [AdminController::class, 'update'])->name('product.update');
     Route::delete('/product/delete/{id}', [AdminController::class, 'destroy'])->name('product.destroy');
+    Route::get('/admin/user', [AdminController::class, 'user'])->name('data-user');
+    Route::get('/admin/user/create', [AdminController::class, 'userCreate'])->name('user.create');
+    Route::post('/admin/user/store', [AdminController::class, 'userStore'])->name('user.store');
+    
+    Route::get('/admin/user/edit/{id}', [AdminController::class, 'editUser'])->name('user.edit');
+    Route::put('/admin/user/update/{id}', [AdminController::class, 'updateUser'])->name('user.update');
+    Route::delete('/user/delete/{id}', [AdminController::class, 'destroyUser'])->name('user.delete');
+
+
+
+
+
 
 
     Route::get('/admin/add-penjualan', [AdminController::class, 'addPenjualan'])->name('admin-add-penjualan');

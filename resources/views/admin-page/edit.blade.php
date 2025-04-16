@@ -80,9 +80,11 @@
                                                 <div class="col-md-12">
                                                     <input type="file" name="product_image"
                                                         class="form-control form-control-line">
-                                                    @if ($products->product_image)
-                                                        <small class="text-muted">Gambar saat ini:
-                                                            {{ $products->product_image }}</small>
+                                                    @if ($products->product_image) <small> Gambar Kamu Saat Ini:
+                                                    <td><img src="{{ asset('storage/' . $products->product_image) }}"
+                                                        width="50" height="50"
+                                                        style="object-fit:cover; border-radius:5px;"></td>
+                                                    </small>
                                                     @endif
                                                     @error('product_image')
                                                         <span class="text-danger">{{ $message }}</span>
@@ -99,7 +101,7 @@
                                                         class="text-danger">*</span></label>
                                                 <div class="col-md-12">
                                                     <input type="text" name="price" id="price"
-                                                        value="Rp {{ number_format($products->price, 0, ',', '.') }}}"
+                                                        value="Rp {{ number_format($products->price, 0, ',', '.') }}"
                                                         class="form-control form-control-line">
                                                     @error('price')
                                                         <span class="text-danger">{{ $message }}</span>

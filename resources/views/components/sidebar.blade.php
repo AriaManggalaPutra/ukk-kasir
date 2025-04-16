@@ -27,7 +27,7 @@
 
         <!-- User -->
         <li class="nav-item">
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="{{route('data-user')}}">
                 <i class="bi bi-person-lines-fill"></i>
                 <span>User</span>
             </a>
