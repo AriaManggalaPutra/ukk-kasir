@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
+            $table->string('name', 100);
+            $table->string('phone', 15)->nullable()->unique();
+            $table->integer('points')->default(0);
+            $table->enum('customer_status', ['Member', 'Non-Member'])->default('Non-Member');
             $table->timestamps();
         });
     }

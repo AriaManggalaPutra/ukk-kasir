@@ -126,22 +126,64 @@
         </div>
         <script>
             $(document).ready(function() {
-                $('#salesTable').DataTable({
-                    "language": {
-                        "emptyTable": "Tidak ada data tersedia",
-                        "search": "Cari:",
-                        "lengthMenu": "Tampilkan _MENU_ entri",
-                        "info": "Menampilkan _START_ hingga _END_ dari _TOTAL_ entri",
-                        "infoEmpty": "Menampilkan 0 hingga 0 dari 0 entri",
-                        "paginate": {
-                            "first": "Pertama",
-                            "last": "Terakhir",
-                            "next": "Selanjutnya",
-                            "previous": "Sebelumnya"
-                        }
+                // Menambahkan validasi harga dan stok saat form disubmit
+                $('form').submit(function(event) {
+                    var price = $('#price').val();
+                    var stock = $('input[name="stock"]').val();
+
+                    // Menghapus tanda pemisah ribuan untuk validasi angka
+                    var priceNumber = parseInt(price.replace(/[^0-9]/g, ''));
+                    var stockNumber = parseInt(stock.replace(/[^0-9]/g, ''));
+
+                    // Cek apakah harga lebih dari 10 juta
+                    if (priceNumber > 10000000) {
+                        notif('error', 'Harga tidak boleh lebih dari 10 juta');
+                        event.preventDefault();  // Mencegah form untuk disubmit
+                        return false;
+                    }
+
+                    // Cek apakah stok lebih dari 10 juta
+                    if (stockNumber > 10000000) {
+                        notif('error', 'Stok tidak boleh lebih dari 10 juta');
+                        event.preventDefault();  // Mencegah form untuk disubmit
+                        return false;
                     }
                 });
+
+                // Format harga input
+                $('#price').keyup(function(e) {
+                    e.target.value = formatRupiah(this.value, 'Rp. ');
+                });
+
+                const formatRupiah = (angka, prefix) => {
+                    var number_string = angka.replace(/[^,\d]/g, '').toString(),
+                        split = number_string.split(','),
+                        sisa = split[0].length % 3,
+                        rupiah = split[0].substr(0, sisa),
+                        ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+                    if (ribuan) {
+                        separator = sisa ? '.' : '';
+                        rupiah += separator + ribuan.join('.');
+                    }
+
+                    rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+                    return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
+                }
+
+                $('#price_display').on('keyup', function(e) {
+                    let angkaBersih = this.value.replace(/[^0-9]/g, '');
+                    $('#price').val(angkaBersih); // untuk dikirim ke backend
+                    this.value = formatRupiah(this.value, 'Rp. ');
+                });
             });
+
+            function notif(type, msg) {
+                Swal.fire({
+                    icon: type,
+                    text: msg
+                });
+            }
         </script>
         <script src="http://45.64.100.26:88/ukk-kasir/public/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
         <script src="http://45.64.100.26:88/ukk-kasir/public/dist/js/app-style-switcher.js"></script>
@@ -154,64 +196,7 @@
             src="http://45.64.100.26:88/ukk-kasir/public/assets/libs/chartist-plugin-tooltips/dist/chartist-plugin-tooltip.min.js">
         </script>
         <script src="http://45.64.100.26:88/ukk-kasir/public/dist/js/pages/dashboards/dashboard1.js"></script>
-        <script>
-            $('#price').keyup(function(e) {
-                e.target.value = formatRupiah(this.value, 'Rp. ');
-            });
-
-            /* Fungsi */
-            const formatRupiah = (angka, prefix) => {
-                var number_string = angka.replace(/[^,\d]/g, '').toString(),
-                    split = number_string.split(','),
-                    sisa = split[0].length % 3,
-                    rupiah = split[0].substr(0, sisa),
-                    ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-                if (ribuan) {
-                    separator = sisa ? '.' : '';
-                    rupiah += separator + ribuan.join('.');
-                }
-
-                rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-                return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
-            }
-
-            $('#price_display').on('keyup', function(e) {
-                let angkaBersih = this.value.replace(/[^0-9]/g, '');
-                $('#price').val(angkaBersih); // untuk dikirim ke backend
-                this.value = formatRupiah(this.value, 'Rp. ');
-            });
-        </script>
-        <script>
-            function notif(type, msg) {
-                Swal.fire({
-                    icon: type,
-                    text: msg
-                })
-            }
-        </script>
-        <script>
-            function HitData(urlPost, dataPost, typePost) {
-                return new Promise((resolve, reject) => {
-                    $.ajax({
-                        url: urlPost,
-                        data: dataPost,
-                        type: typePost,
-                        headers: {
-                            'X-CSRF-TOKEN': "Lwae60MB2gIQ7WELSbccuKKjcWHMR1DrOlOfIJS0"
-                        },
-                        success: (response) => {
-                            resolve(response)
-                        },
-                        error: (error) => {
-                            reject(error)
-                        }
-                    })
-                })
-            }
-        </script>
     </body>
 
     </html>
-
 </x-layout>

@@ -2,11 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PenjualanExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Models\OrderDetail\OrderDetail;
+use App\Models\Pembelian\Pembelian;
 use App\Models\Product\Product;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
+
+
 
 
 
@@ -14,8 +22,23 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
-        return view('admin-page.dashboard');
-    }
+  // Penjualan per hari
+  $salesPerDay = Pembelian::select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as total_orders'))
+  ->groupBy('date')
+  ->orderBy('date', 'ASC')
+  ->get();
+
+
+  // Produk terjual (join ke tabel products)
+  $productsSold = OrderDetail::join('products', 'order_details.product_id', '=', 'products.id')
+      ->select('products.product_name', DB::raw('SUM(order_details.quantity) as total_qty'))
+      ->groupBy('products.product_name')
+      ->get();
+
+  return view('admin-page.dashboard', [
+      'salesPerDay' => $salesPerDay,
+      'productsSold' => $productsSold
+  ]);    }
 
     public function product()
     {
@@ -156,5 +179,76 @@ class AdminController extends Controller
         $user->delete();
         return redirect()->route('data-user')->with('success', 'User berhasil dihapus!');
     }
+
+    public function index(Request $request)
+    {
+        $query = Pembelian::with('customer', 'user')->latest();
+    
+        // Filter berdasarkan tanggal spesifik
+        if ($request->filter_type === 'date' && $request->date) {
+            $query->whereDate('created_at', $request->date);
+        }
+        // Filter berdasarkan hari
+        elseif ($request->filter_type === 'day' && $request->day) {
+            $query->whereDay('created_at', $request->day);
+        }
+        // Filter berdasarkan bulan
+        elseif ($request->filter_type === 'month' && $request->month) {
+            $query->whereMonth('created_at', $request->month);
+        }
+        // Filter berdasarkan tahun
+        elseif ($request->filter_type === 'year' && $request->year) {
+            $query->whereYear('created_at', $request->year);
+        }
+    
+        $orders = $query->get();
+    
+        if (auth()->user()->role == 'admin') {
+            return view('admin-page.penjualan', compact('orders'));
+        } else {
+            return view('petugas.pembelian.index', compact('orders'));
+        }
+    }
+
+    public function print($id)
+    {
+        $order = Pembelian::with(['customer', 'orderDetails.product', 'user'])->findOrFail($id);
+
+        $pdf = Pdf::loadView('admin-page.receipt-pdf', compact('order'))->setPaper('A5');
+
+        // Nama file yang ingin di-download
+        $fileName = "receipt-{$order->id}.pdf";
+
+        // Mengunduh langsung ke device
+        return $pdf->download($fileName);
+    }
+
+    public function exportPenjualan(Request $request)
+{
+    $filterType = $request->input('filter_type');
+    $date = $request->input('date');
+    $day = $request->input('day');
+    $month = $request->input('month');
+    $year = $request->input('year');
+    
+    $filename = 'laporan-penjualan';
+    
+    // Set filename berdasarkan filter
+    if ($filterType === 'date' && $date) {
+        $filename .= '-tanggal-' . $date;
+    } elseif ($filterType === 'day' && $day) {
+        $filename .= '-hari-' . $day;
+    } elseif ($filterType === 'month' && $month) {
+        $filename .= '-bulan-' . $month;
+    } elseif ($filterType === 'year' && $year) {
+        $filename .= '-tahun-' . $year;
+    }
+    
+    $filename .= '.xlsx';
+    
+    return Excel::download(new PenjualanExport($date, $day, $month, $year, $filterType), $filename);
+}
+    
+
 
 }

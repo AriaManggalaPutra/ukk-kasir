@@ -1,9 +1,13 @@
 <?php
 
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PetugasController;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PenjualanExport;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -14,7 +18,10 @@ use App\Http\Controllers\PetugasController;
 | routes are loaded by the RouteServiceProvider and all of them will
 | be assigned to the "web" middleware group. Make something great!
 |
+
 */
+
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -37,14 +44,13 @@ Route::middleware(['auth', 'cekrole:admin'])->group(function () {
     Route::get('/admin/user', [AdminController::class, 'user'])->name('data-user');
     Route::get('/admin/user/create', [AdminController::class, 'userCreate'])->name('user.create');
     Route::post('/admin/user/store', [AdminController::class, 'userStore'])->name('user.store');
-    
+    Route::get('/admin/penjualan', [AdminController::class, 'index'])->name('admin-penjualan');
+
+    Route::get('/export-penjualan', [AdminController::class, 'exportPenjualan'])->name('penjualan.export');
+
     Route::get('/admin/user/edit/{id}', [AdminController::class, 'editUser'])->name('user.edit');
     Route::put('/admin/user/update/{id}', [AdminController::class, 'updateUser'])->name('user.update');
     Route::delete('/user/delete/{id}', [AdminController::class, 'destroyUser'])->name('user.delete');
-
-
-
-
 
 
 
@@ -57,5 +63,22 @@ Route::middleware(['auth', 'cekrole:admin'])->group(function () {
 
 Route::middleware(['auth', 'cekrole:petugas'])->group(function () {
     Route::get('/petugas/dashboard', [PetugasController::class, 'dashboard'])->name('petugas-dashboard');
+    Route::get('/petugas/product', [PetugasController::class, 'product'])->name('petugas-product');
+
+    Route::get('/petugas/formInput', [PetugasController::class, 'formInput'])->name('petugas-formInput');
+    Route::get('/petugas/create', [PetugasController::class, 'create'])->name('petugas.create');
+    Route::post('/petugas/store', [PetugasController::class, 'store'])->name('petugas.store');
+    Route::get('/receipt/{order}', [PetugasController::class, 'receipt'])->name('receipt.show');
+    Route::get('/petugas/pembelian', [PetugasController::class, 'pembelian'])->name('petugas.pembelian');
+    Route::get('/member/verification', [PetugasController::class, 'showVerificationForm'])->name('member.verification');
+    Route::post('/member/verification', [PetugasController::class, 'verifyMember'])->name('member.verify');
+
+
+
+
+
+
+
 });
 
+Route::get('/print/{order}', [AdminController::class, 'print'])->name('pembelian.print');
