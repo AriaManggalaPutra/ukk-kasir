@@ -8,6 +8,6 @@ class PetugasController extends Controller
 {
     public function dashboard()
     {
-        return view('petugas.dashboard');
+        return view('petugas-page.dashboard');
     }
 }
